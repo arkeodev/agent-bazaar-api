@@ -11,6 +11,7 @@ config = Config(env_path)
 
 class AppSettings(BaseSettings):
     APP_NAME: str = config("APP_NAME", default="FastAPI app")
+    API_BASE_URL: str = config("API_BASE_URL", default="http://localhost:8000")
     APP_DESCRIPTION: str | None = config("APP_DESCRIPTION", default=None)
     APP_VERSION: str | None = config("APP_VERSION", default=None)
     LICENSE_NAME: str | None = config("LICENSE", default=None)

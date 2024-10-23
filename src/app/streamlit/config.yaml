@@ -1,0 +1,14 @@
+agents:
+  - name: Subtitle Translator
+    image_path: ./images/subtitle_translator.png
+  - name: Agent 2
+    image_path: ./images/agent_2.png
+  - name: Agent 3
+    image_path: ./images/agent_3.png
+  - name: Agent 4
+    image_path: ./images/agent_4.png
+  - name: Agent 5
+    image_path: ./images/agent_5.png
+  - name: Agent 6
+    image_path: ./images/agent_6.png
+

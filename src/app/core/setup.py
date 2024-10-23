@@ -10,9 +10,11 @@ from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import inspect
 
 from ..api.dependencies import get_current_superuser
 from ..middleware.client_cache_middleware import ClientCacheMiddleware
+from ..models import *
 from .config import (
     AppSettings,
     ClientSideCacheSettings,
@@ -24,14 +26,26 @@ from .config import (
     RedisRateLimiterSettings,
     settings,
 )
-from .db.database import Base, async_engine as engine
+from .db.database import Base
+from .db.database import async_engine as engine
 from .utils import cache, queue, rate_limit
-from ..models import *
+
 
 # -------------- database --------------
 async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+async def create_tables_if_not_exist() -> None:
+    async with engine.begin() as conn:
+        def inspect_tables(connection):
+            inspector = inspect(connection)
+            return inspector.get_table_names()
+
+        existing_tables = await conn.run_sync(inspect_tables)
+        if not set(Base.metadata.tables.keys()).issubset(existing_tables):
+            await conn.run_sync(Base.metadata.create_all)
 
 
 # -------------- cache --------------
@@ -88,7 +102,7 @@ def lifespan_factory(
         await set_threadpool_tokens()
 
         if isinstance(settings, DatabaseSettings) and create_tables_on_start:
-            await create_tables()
+            await create_tables_if_not_exist()
 
         if isinstance(settings, RedisCacheSettings):
             await create_redis_cache_pool()
@@ -211,3 +225,6 @@ def create_application(
             application.include_router(docs_router)
 
         return application
+
+
+

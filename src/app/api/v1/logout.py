@@ -9,7 +9,7 @@ from ...core.security import blacklist_token, oauth2_scheme
 router = APIRouter(tags=["login"])
 
 
-@router.post("/logout")
+@router.post("/logout", status_code=201)
 async def logout(
     response: Response, access_token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(async_get_db)
 ) -> dict[str, str]:
