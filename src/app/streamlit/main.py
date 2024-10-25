@@ -1,5 +1,7 @@
+import base64
 import logging
 import os
+from typing import Optional
 
 import streamlit as st
 import yaml
@@ -11,6 +13,7 @@ from src.app.core.logger import logging
 from src.app.schemas.agent import Agent
 from src.app.streamlit.streamlit_auth import (
     is_logged_in,
+    load_image_as_base64,
     login_user,
     logout_user,
     register_user,
@@ -78,11 +81,30 @@ def call_login_user():
 # Show login form modal
 def show_login_modal():
     with st.form("login_form", clear_on_submit=True):
-        st.subheader("Login")
-        # Username and password fields
-        username = st.text_input("Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
-        st.form_submit_button("Login", on_click=call_login_user)
+        st.markdown(
+            """
+            <div class="auth-form">
+                <h2 style="text-align:center; margin-bottom:2rem;">Welcome Back</h2>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+        username = st.text_input(
+            "Username", key="login_username", placeholder="Enter your username"
+        )
+        password = st.text_input(
+            "Password",
+            type="password",
+            key="login_password",
+            placeholder="Enter your password",
+        )
+
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.form_submit_button(
+                "Login", on_click=call_login_user, use_container_width=True
+            )
 
 
 # Handle registration submission
@@ -164,28 +186,19 @@ def agent_detail_page(agent_name):
 
 # Main application function
 def main():
-    # Set up the page configuration
     st.set_page_config(page_title="Agent Bazaar", page_icon="🏪", layout="wide")
 
-    # Custom CSS for the menu to hide specific Streamlit elements
+    # Load custom CSS
+    with open(os.path.join(os.path.dirname(__file__), "styles.css")) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+    # Hide Streamlit default elements
     st.markdown(
         """
         <style>
         #MainMenu {visibility: hidden;}
         .stDeployButton {display:none;}
-        .auth-button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 12px;
-        }
+        footer {visibility: hidden;}
         </style>
         """,
         unsafe_allow_html=True,
@@ -246,25 +259,35 @@ def main():
                 unsafe_allow_html=True,
             )
 
-            # Display agents in rows of 3
+            # Display agents in a grid
             for i in range(0, len(agents), 3):
                 cols = st.columns(3)
                 for j in range(3):
                     if i + j < len(agents):
                         agent = agents[i + j]
                         with cols[j]:
-                            st.markdown(
-                                f"<h4 style='text-align: center;'><strong>{agent.name}</strong></h4>",
-                                unsafe_allow_html=True,
-                            )
-                            image = load_image(agent.image_path)
-                            if image:
-                                st.image(image, use_column_width=True)
-                            else:
-                                st.error(f"Failed to load image for {agent.name}")
-                            st.button(
-                                "Use", key=f"use_{agent.name}", use_container_width=True
-                            )
+                            with st.container():
+                                st.markdown(
+                                    f"""
+                                    <div class="agent-card">
+                                        <h3 class="agent-title">{agent.name}</h3>
+                                        <div class="agent-image-container">
+                                            <img src="data:image/png;base64,{load_image_as_base64(agent.image_path)}" 
+                                                 style="width:100%; border-radius:10px;">
+                                        </div>
+                                        <div style="height:20px"></div>
+                                    </div>
+                                """,
+                                    unsafe_allow_html=True,
+                                )
+
+                                if st.button(
+                                    "Use Agent",
+                                    key=f"use_{agent.name}",
+                                    help=f"Click to use {agent.name}",
+                                    use_container_width=True,
+                                ):
+                                    set_current_agent(agent.name)
         else:
             # Display the agent detail page if an agent is selected
             agent_detail_page(st.session_state["current_agent"])

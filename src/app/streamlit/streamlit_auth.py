@@ -1,5 +1,7 @@
 # src/app/streamlit_auth.py
+import base64
 import logging
+import os
 from typing import Optional
 
 import requests
@@ -144,3 +146,12 @@ def call_register_user():
     else:
         st.error("Registration failed. Please try again.")
         logger.error(f"Registration failed for user {username}")
+
+
+def load_image_as_base64(image_path: str) -> str:
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except Exception as e:
+        logger.error(f"Error loading image {image_path}: {str(e)}")
+        return ""
