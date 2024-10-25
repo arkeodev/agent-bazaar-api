@@ -33,7 +33,9 @@ class DatabaseSettings(BaseSettings):
 class SQLiteSettings(DatabaseSettings):
     SQLITE_URI: str = config("SQLITE_URI", default="./sql_app.db")
     SQLITE_SYNC_PREFIX: str = config("SQLITE_SYNC_PREFIX", default="sqlite:///")
-    SQLITE_ASYNC_PREFIX: str = config("SQLITE_ASYNC_PREFIX", default="sqlite+aiosqlite:///")
+    SQLITE_ASYNC_PREFIX: str = config(
+        "SQLITE_ASYNC_PREFIX", default="sqlite+aiosqlite:///"
+    )
 
 
 class MySQLSettings(DatabaseSettings):
@@ -42,7 +44,9 @@ class MySQLSettings(DatabaseSettings):
     MYSQL_SERVER: str = config("MYSQL_SERVER", default="localhost")
     MYSQL_PORT: int = config("MYSQL_PORT", default=5432)
     MYSQL_DB: str = config("MYSQL_DB", default="dbname")
-    MYSQL_URI: str = f"{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_SERVER}:{MYSQL_PORT}/{MYSQL_DB}"
+    MYSQL_URI: str = (
+        f"{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_SERVER}:{MYSQL_PORT}/{MYSQL_DB}"
+    )
     MYSQL_SYNC_PREFIX: str = config("MYSQL_SYNC_PREFIX", default="mysql://")
     MYSQL_ASYNC_PREFIX: str = config("MYSQL_ASYNC_PREFIX", default="mysql+aiomysql://")
     MYSQL_URL: str = config("MYSQL_URL", default=None)
@@ -55,8 +59,12 @@ class PostgresSettings(DatabaseSettings):
     POSTGRES_PORT: int = config("POSTGRES_PORT", default=5432)
     POSTGRES_DB: str = config("POSTGRES_DB", default="postgres")
     POSTGRES_SYNC_PREFIX: str = config("POSTGRES_SYNC_PREFIX", default="postgresql://")
-    POSTGRES_ASYNC_PREFIX: str = config("POSTGRES_ASYNC_PREFIX", default="postgresql+asyncpg://")
-    POSTGRES_URI: str = f"{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    POSTGRES_ASYNC_PREFIX: str = config(
+        "POSTGRES_ASYNC_PREFIX", default="postgresql+asyncpg://"
+    )
+    POSTGRES_URI: str = (
+        f"{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    )
     POSTGRES_URL: str | None = config("POSTGRES_URL", default=None)
 
 
@@ -67,8 +75,7 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
 
 
-class TestSettings(BaseSettings):
-    ...
+class TestSettings(BaseSettings): ...
 
 
 class EnvironmentOption(Enum):

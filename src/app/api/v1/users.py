@@ -1,20 +1,20 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
-from fastcrud.paginated import (PaginatedListResponse, compute_offset,
-                                paginated_response)
+from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_superuser, get_current_user
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import (DuplicateValueException,
-                                                ForbiddenException,
-                                                NotFoundException)
+from ...core.exceptions.http_exceptions import (
+    DuplicateValueException,
+    ForbiddenException,
+    NotFoundException,
+)
 from ...core.logger import logging
 from ...core.security import blacklist_token, get_password_hash, oauth2_scheme
 from ...crud.crud_users import crud_users
-from ...schemas.user import (UserCreate, UserCreateInternal, UserRead,
-                             UserUpdate)
+from ...schemas.user import UserCreate, UserCreateInternal, UserRead, UserUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,9 @@ router = APIRouter(tags=["users"])
 
 @router.post("/user", response_model=UserRead, status_code=201)
 async def write_user(
-    request: Request, user: UserCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
+    request: Request,
+    user: UserCreate,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> UserRead:
     logger.info(f"Creating user with email: {user.email} and username: {user.username}")
     email_row = await crud_users.exists(db=db, email=user.email)
@@ -37,7 +39,9 @@ async def write_user(
         raise DuplicateValueException("Username not available")
 
     user_internal_dict = user.model_dump()
-    user_internal_dict["hashed_password"] = get_password_hash(password=user_internal_dict["password"])
+    user_internal_dict["hashed_password"] = get_password_hash(
+        password=user_internal_dict["password"]
+    )
     del user_internal_dict["password"]
 
     user_internal = UserCreateInternal(**user_internal_dict)
@@ -48,7 +52,10 @@ async def write_user(
 
 @router.get("/users", response_model=PaginatedListResponse[UserRead])
 async def read_users(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10
+    request: Request,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    page: int = 1,
+    items_per_page: int = 10,
 ) -> dict:
     users_data = await crud_users.get_multi(
         db=db,
@@ -58,17 +65,23 @@ async def read_users(
         is_deleted=False,
     )
 
-    response: dict[str, Any] = paginated_response(crud_data=users_data, page=page, items_per_page=items_per_page)
+    response: dict[str, Any] = paginated_response(
+        crud_data=users_data, page=page, items_per_page=items_per_page
+    )
     return response
 
 
 @router.get("/user/me/", response_model=UserRead)
-async def read_users_me(request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]) -> UserRead:
+async def read_users_me(
+    request: Request, current_user: Annotated[UserRead, Depends(get_current_user)]
+) -> UserRead:
     return current_user
 
 
 @router.get("/user/{username}", response_model=UserRead)
-async def read_user(request: Request, username: str, db: Annotated[AsyncSession, Depends(async_get_db)]) -> dict:
+async def read_user(
+    request: Request, username: str, db: Annotated[AsyncSession, Depends(async_get_db)]
+) -> dict:
     db_user: UserRead | None = await crud_users.get(
         db=db, schema_to_select=UserRead, username=username, is_deleted=False
     )

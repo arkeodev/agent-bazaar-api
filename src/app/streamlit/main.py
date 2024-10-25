@@ -6,18 +6,18 @@ import yaml
 from PIL import Image
 from pydantic import BaseModel
 
-from src.app.streamlit.streamlit_auth import (get_current_user, is_logged_in,
-                                              login_user, logout_user,
-                                              register_user)
+from src.app.api.dependencies import get_current_user
+from src.app.core.logger import logging
+from src.app.schemas.agent import Agent
+from src.app.streamlit.streamlit_auth import (
+    is_logged_in,
+    login_user,
+    logout_user,
+    register_user,
+)
 
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Define Agent model using Pydantic
-class Agent(BaseModel):
-    name: str
-    image_path: str
 
 # Load agents from the configuration file
 def load_agents_from_config(config_file):
@@ -30,10 +30,12 @@ def load_agents_from_config(config_file):
             config = yaml.safe_load(file)
 
         agents = []
-        for agent_data in config['agents']:
+        for agent_data in config["agents"]:
             # Convert relative image path to absolute path
-            image_path = os.path.abspath(os.path.join(current_dir, agent_data['image_path']))
-            agent_data['image_path'] = image_path
+            image_path = os.path.abspath(
+                os.path.join(current_dir, agent_data["image_path"])
+            )
+            agent_data["image_path"] = image_path
             logger.info(f"Agent: {agent_data['name']}, Image path: {image_path}")
             agents.append(Agent(**agent_data))
 
@@ -42,6 +44,7 @@ def load_agents_from_config(config_file):
         logger.error(f"Error loading agents from config: {str(e)}")
         return []
 
+
 # New function to load image using PIL
 def load_image(image_path):
     try:
@@ -49,6 +52,7 @@ def load_image(image_path):
     except Exception as e:
         logger.error(f"Error loading image {image_path}: {str(e)}")
         return None
+
 
 # Authentication handling functions
 # Handle login submission
@@ -63,13 +67,13 @@ def call_login_user():
         result = login_user(username, password)
         if result:
             # Store access token in session state if login is successful
-            st.session_state['access_token'] = result['access_token']
+            st.session_state["access_token"] = result["access_token"]
             st.success("Logged in successfully!")
             logger.info(f"User {username} logged in successfully")
-            st.session_state['login_success'] = True
         else:
             st.error("Invalid username or password")
             logger.error(f"Login failed for user {username}")
+
 
 # Show login form modal
 def show_login_modal():
@@ -79,6 +83,7 @@ def show_login_modal():
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
         st.form_submit_button("Login", on_click=call_login_user)
+
 
 # Handle registration submission
 def call_register_user():
@@ -95,12 +100,12 @@ def call_register_user():
         if register_user(username, email, full_name, password, password_confirm):
             st.success("Registered successfully! Please login.")
             logger.info(f"User {username} registered successfully")
-            st.session_state['registration_success'] = True
         else:
             st.error("Registration failed. Please try again.")
             logger.error(f"Registration failed for user {username}")
     else:
         st.error("Please fill in all fields correctly.")
+
 
 # Show registration form modal
 def show_register_modal():
@@ -111,21 +116,24 @@ def show_register_modal():
         username = st.text_input("Username", key="register_username")
         email = st.text_input("Email", key="register_email")
         password = st.text_input("Password", type="password", key="register_password")
-        password_confirm = st.text_input("Confirm Password", type="password", key="register_password_confirm")
+        password_confirm = st.text_input(
+            "Confirm Password", type="password", key="register_password_confirm"
+        )
         st.form_submit_button("Register", on_click=call_register_user)
+
 
 # Handle user logout
 def call_logout_user():
-    current_user = get_current_user()
-    if current_user:
-        logger.info(f"Logout attempt for user: {current_user['username']}")
+    if "access_token" in st.session_state:
+        logger.info("Logout attempt initiated")
         if logout_user():
             st.success("Logged out successfully!")
-            logger.info(f"User {current_user['username']} logged out successfully")
-            st.session_state['logout_success'] = True
+            logger.info("User logged out successfully")
+            st.session_state["logout_success"] = True
         else:
             st.error("Logout failed. Please try again.")
-            logger.error(f"Logout failed for user {current_user['username']}")
+            logger.error("Logout failed")
+
 
 # Agent handling functions
 # Set the current agent and rerun the app
@@ -134,19 +142,25 @@ def set_current_agent(name):
     st.session_state["current_agent"] = name
     st.rerun()
 
+
 # Reset the current agent and rerun the app
 def reset_current_agent():
     # Reset the current agent in session state and rerun the app to update the UI
     st.session_state["current_agent"] = None
     st.rerun()
 
+
 # Display agent details
 def agent_detail_page(agent_name):
     # Display the detail page for the selected agent
     st.markdown(f"<h1 class='centered-title'>{agent_name}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h3 class='centered-text'>You are now using {agent_name}.</h3>", unsafe_allow_html=True)
+    st.markdown(
+        f"<h3 class='centered-text'>You are now using {agent_name}.</h3>",
+        unsafe_allow_html=True,
+    )
     # Back button to return to the main Agent Bazaar page
     st.button("Back", key="back_button", on_click=reset_current_agent)
+
 
 # Main application function
 def main():
@@ -174,7 +188,7 @@ def main():
         }
         </style>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     # Top menu for login, registration, and logout
@@ -189,29 +203,20 @@ def main():
             logger.info("Register button clicked")
             show_register_modal()
 
-        # Handle registration and login success
-        if st.session_state.get('registration_success'):
-            del st.session_state['registration_success']
-            st.rerun()
-
-        if st.session_state.get('login_success'):
-            del st.session_state['login_success']
-            st.rerun()
-
         # Welcome message when not logged in
-        st.markdown("<h1 class='centered-title'>Welcome to Agent Bazaar</h1>", unsafe_allow_html=True)
-        st.markdown("<h3 class='centered-text'>Please login or register to access the agents.</h3>", unsafe_allow_html=True)
+        st.markdown(
+            "<h1 class='centered-title'>Welcome to Agent Bazaar</h1>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<h3 class='centered-text'>Please login or register to access the agents.</h3>",
+            unsafe_allow_html=True,
+        )
     else:
         # Show logout button if the user is logged in
-        col1.button("Logout", on_click=call_logout_user)
-        user = get_current_user()
-        if user:
-            # Display a welcome message with the username
-            col2.write(f"Welcome, {user['username']}!")
-
-        # Handle logout success
-        if st.session_state.get('logout_success'):
-            del st.session_state['logout_success']
+        if col1.button("Logout"):
+            logger.info("Logout button clicked")
+            call_logout_user()
             st.rerun()
 
         # Get the directory of the current script
@@ -233,8 +238,13 @@ def main():
 
         if st.session_state["current_agent"] is None:
             # Display the main Agent Bazaar page
-            st.markdown("<h1 class='centered-title'>Agent Bazaar</h1>", unsafe_allow_html=True)
-            st.markdown("<h3 class='centered-text'>Welcome to Agent Bazaar! Click on an agent to explore its functionality.</h3>", unsafe_allow_html=True)
+            st.markdown(
+                "<h1 class='centered-title'>Agent Bazaar</h1>", unsafe_allow_html=True
+            )
+            st.markdown(
+                "<h3 class='centered-text'>Welcome to Agent Bazaar! Click on an agent to explore its functionality.</h3>",
+                unsafe_allow_html=True,
+            )
 
             # Display agents in rows of 3
             for i in range(0, len(agents), 3):
@@ -243,16 +253,22 @@ def main():
                     if i + j < len(agents):
                         agent = agents[i + j]
                         with cols[j]:
-                            st.markdown(f"<h4 style='text-align: center;'><strong>{agent.name}</strong></h4>", unsafe_allow_html=True)
+                            st.markdown(
+                                f"<h4 style='text-align: center;'><strong>{agent.name}</strong></h4>",
+                                unsafe_allow_html=True,
+                            )
                             image = load_image(agent.image_path)
                             if image:
                                 st.image(image, use_column_width=True)
                             else:
                                 st.error(f"Failed to load image for {agent.name}")
-                            st.button("Use", key=f"use_{agent.name}", use_container_width=True)
+                            st.button(
+                                "Use", key=f"use_{agent.name}", use_container_width=True
+                            )
         else:
             # Display the agent detail page if an agent is selected
             agent_detail_page(st.session_state["current_agent"])
+
 
 if __name__ == "__main__":
     main()
