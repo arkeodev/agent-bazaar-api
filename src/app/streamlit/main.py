@@ -6,10 +6,10 @@ import yaml
 from PIL import Image
 from pydantic import BaseModel
 
+from src.app.api.dependencies import get_current_user
 from src.app.core.logger import logging
 from src.app.schemas.agent import Agent
 from src.app.streamlit.streamlit_auth import (
-    get_current_user,
     is_logged_in,
     login_user,
     logout_user,
@@ -124,16 +124,15 @@ def show_register_modal():
 
 # Handle user logout
 def call_logout_user():
-    current_user = get_current_user()
-    if current_user:
-        logger.info(f"Logout attempt for user: {current_user['username']}")
+    if "access_token" in st.session_state:
+        logger.info("Logout attempt initiated")
         if logout_user():
             st.success("Logged out successfully!")
-            logger.info(f"User {current_user['username']} logged out successfully")
+            logger.info("User logged out successfully")
             st.session_state["logout_success"] = True
         else:
             st.error("Logout failed. Please try again.")
-            logger.error(f"Logout failed for user {current_user['username']}")
+            logger.error("Logout failed")
 
 
 # Agent handling functions
@@ -216,12 +215,9 @@ def main():
     else:
         # Show logout button if the user is logged in
         if col1.button("Logout"):
+            logger.info("Logout button clicked")
             call_logout_user()
             st.rerun()
-        user = get_current_user()
-        if user:
-            # Display a welcome message with the username
-            col2.write(f"Welcome, {user['username']}!")
 
         # Get the directory of the current script
         current_dir = os.path.dirname(os.path.abspath(__file__))

@@ -5,12 +5,9 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from ..core.config import settings
+from src.app.core.config import settings
+from src.app.core.logger import logging
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
 logger = logging.getLogger(__name__)
 
 # Use the API_BASE_URL from settings
@@ -72,20 +69,8 @@ def is_logged_in() -> bool:
     return "access_token" in st.session_state
 
 
-def get_current_user() -> Optional[dict]:
-    if not is_logged_in():
-        return None
-
-    headers = {"Authorization": f"Bearer {st.session_state['access_token']}"}
-    response = requests.get(f"{API_BASE_URL}/api/v1/users/me", headers=headers)
-
-    if response.status_code == 200:
-        return response.json()
-    return None
-
-
 def logout_user():
-    logger.info("Attempting to log out user on {API_BASE_URL}/api/v1/logout")
+    logger.info(f"Attempting to log out user on {API_BASE_URL}/api/v1/logout")
     try:
         access_token = st.session_state.get("access_token")
         if not access_token:
@@ -97,10 +82,9 @@ def logout_user():
 
         if response.status_code == 201:
             logger.info("User logged out successfully")
-            # Clear session state
-            st.session_state.pop("access_token", None)
-            # Note: We can't directly manipulate cookies in Streamlit,
-            # but the server-side will handle deleting the refresh token
+            # Clear all session state
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
             return True
         else:
             logger.error(
