@@ -11,8 +11,13 @@ from sqlalchemy import inspect
 
 from ..api.dependencies import get_current_superuser
 from ..models import *
-from .config import (AppSettings, DatabaseSettings, EnvironmentOption,
-                     EnvironmentSettings, settings)
+from .config import (
+    AppSettings,
+    DatabaseSettings,
+    EnvironmentOption,
+    EnvironmentSettings,
+    settings,
+)
 from .db.database import Base
 from .db.database import async_engine as engine
 
@@ -25,6 +30,7 @@ async def create_tables() -> None:
 
 async def create_tables_if_not_exist() -> None:
     async with engine.begin() as conn:
+
         def inspect_tables(connection):
             inspector = inspect(connection)
             return inspector.get_table_names()
@@ -41,11 +47,7 @@ async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
 
 
 def lifespan_factory(
-    settings: (
-        DatabaseSettings
-        | AppSettings
-        | EnvironmentSettings
-    ),
+    settings: DatabaseSettings | AppSettings | EnvironmentSettings,
     create_tables_on_start: bool = True,
 ) -> Callable[[FastAPI], _AsyncGeneratorContextManager[Any]]:
     """Factory to create a lifespan async context manager for a FastAPI app."""
@@ -65,11 +67,7 @@ def lifespan_factory(
 # -------------- application --------------
 def create_application(
     router: APIRouter,
-    settings: (
-        DatabaseSettings
-        | AppSettings
-        | EnvironmentSettings
-    ),
+    settings: DatabaseSettings | AppSettings | EnvironmentSettings,
     create_tables_on_start: bool = True,
     **kwargs: Any,
 ) -> FastAPI:
@@ -143,7 +141,11 @@ def create_application(
 
             @docs_router.get("/openapi.json", include_in_schema=False)
             async def openapi() -> dict[str, Any]:
-                out: dict = get_openapi(title=application.title, version=application.version, routes=application.routes)
+                out: dict = get_openapi(
+                    title=application.title,
+                    version=application.version,
+                    routes=application.routes,
+                )
                 return out
 
             application.include_router(docs_router)
