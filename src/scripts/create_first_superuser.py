@@ -3,7 +3,8 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, MetaData, String, Table, insert, select
+from sqlalchemy import (Boolean, Column, DateTime, Integer, MetaData, String,
+                        Table, insert, select)
 from sqlalchemy.dialects.postgresql import UUID
 
 from ..app.core.config import settings

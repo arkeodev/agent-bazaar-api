@@ -4,7 +4,8 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.db.database import async_get_db
-from ..core.exceptions.http_exceptions import ForbiddenException, UnauthorizedException
+from ..core.exceptions.http_exceptions import (ForbiddenException,
+                                               UnauthorizedException)
 from ..core.logger import logging
 from ..core.security import oauth2_scheme, verify_token
 from ..crud.crud_users import crud_users

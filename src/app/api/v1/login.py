@@ -9,13 +9,9 @@ from ...core.config import settings
 from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import UnauthorizedException
 from ...core.schemas import Token
-from ...core.security import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    authenticate_user,
-    create_access_token,
-    create_refresh_token,
-    verify_token,
-)
+from ...core.security import (ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user,
+                              create_access_token, create_refresh_token,
+                              verify_token)
 
 router = APIRouter(tags=["login"])
 
