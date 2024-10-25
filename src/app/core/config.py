@@ -71,21 +71,6 @@ class TestSettings(BaseSettings):
     ...
 
 
-class RedisCacheSettings(BaseSettings):
-    REDIS_CACHE_HOST: str = config("REDIS_CACHE_HOST", default="localhost")
-    REDIS_CACHE_PORT: int = config("REDIS_CACHE_PORT", default=6379)
-    REDIS_CACHE_URL: str = f"redis://{REDIS_CACHE_HOST}:{REDIS_CACHE_PORT}"
-
-
-class ClientSideCacheSettings(BaseSettings):
-    CLIENT_CACHE_MAX_AGE: int = config("CLIENT_CACHE_MAX_AGE", default=60)
-
-
-class RedisQueueSettings(BaseSettings):
-    REDIS_QUEUE_HOST: str = config("REDIS_QUEUE_HOST", default="localhost")
-    REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
-
-
 class EnvironmentOption(Enum):
     LOCAL = "local"
     STAGING = "staging"
@@ -102,9 +87,6 @@ class Settings(
     CryptSettings,
     FirstUserSettings,
     TestSettings,
-    RedisCacheSettings,
-    ClientSideCacheSettings,
-    RedisQueueSettings,
     EnvironmentSettings,
 ):
     pass

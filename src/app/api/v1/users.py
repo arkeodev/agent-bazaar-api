@@ -1,16 +1,20 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
-from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
+from fastcrud.paginated import (PaginatedListResponse, compute_offset,
+                                paginated_response)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_superuser, get_current_user
 from ...core.db.database import async_get_db
-from ...core.exceptions.http_exceptions import DuplicateValueException, ForbiddenException, NotFoundException
+from ...core.exceptions.http_exceptions import (DuplicateValueException,
+                                                ForbiddenException,
+                                                NotFoundException)
 from ...core.logger import logging
 from ...core.security import blacklist_token, get_password_hash, oauth2_scheme
 from ...crud.crud_users import crud_users
-from ...schemas.user import UserCreate, UserCreateInternal, UserRead, UserUpdate
+from ...schemas.user import (UserCreate, UserCreateInternal, UserRead,
+                             UserUpdate)
 
 logger = logging.getLogger(__name__)
 
