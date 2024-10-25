@@ -20,7 +20,7 @@ from ...core.security import (
 router = APIRouter(tags=["login"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token, status_code=201)
 async def login_for_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -43,7 +43,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/refresh")
+@router.post("/refresh", status_code=201)
 async def refresh_access_token(request: Request, db: AsyncSession = Depends(async_get_db)) -> dict[str, str]:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:

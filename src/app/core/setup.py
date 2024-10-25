@@ -10,9 +10,11 @@ from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import inspect
 
 from ..api.dependencies import get_current_superuser
 from ..middleware.client_cache_middleware import ClientCacheMiddleware
+from ..models import *
 from .config import (
     AppSettings,
     ClientSideCacheSettings,
@@ -21,17 +23,28 @@ from .config import (
     EnvironmentSettings,
     RedisCacheSettings,
     RedisQueueSettings,
-    RedisRateLimiterSettings,
     settings,
 )
-from .db.database import Base, async_engine as engine
-from .utils import cache, queue, rate_limit
-from ..models import *
+from .db.database import Base
+from .db.database import async_engine as engine
+from .utils import cache, queue
+
 
 # -------------- database --------------
 async def create_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+async def create_tables_if_not_exist() -> None:
+    async with engine.begin() as conn:
+        def inspect_tables(connection):
+            inspector = inspect(connection)
+            return inspector.get_table_names()
+
+        existing_tables = await conn.run_sync(inspect_tables)
+        if not set(Base.metadata.tables.keys()).issubset(existing_tables):
+            await conn.run_sync(Base.metadata.create_all)
 
 
 # -------------- cache --------------
@@ -53,16 +66,6 @@ async def close_redis_queue_pool() -> None:
     await queue.pool.aclose()  # type: ignore
 
 
-# -------------- rate limit --------------
-async def create_redis_rate_limit_pool() -> None:
-    rate_limit.pool = redis.ConnectionPool.from_url(settings.REDIS_RATE_LIMIT_URL)
-    rate_limit.client = redis.Redis.from_pool(rate_limit.pool)  # type: ignore
-
-
-async def close_redis_rate_limit_pool() -> None:
-    await rate_limit.client.aclose()  # type: ignore
-
-
 # -------------- application --------------
 async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
     limiter = anyio.to_thread.current_default_thread_limiter()
@@ -76,7 +79,6 @@ def lifespan_factory(
         | AppSettings
         | ClientSideCacheSettings
         | RedisQueueSettings
-        | RedisRateLimiterSettings
         | EnvironmentSettings
     ),
     create_tables_on_start: bool = True,
@@ -88,16 +90,13 @@ def lifespan_factory(
         await set_threadpool_tokens()
 
         if isinstance(settings, DatabaseSettings) and create_tables_on_start:
-            await create_tables()
+            await create_tables_if_not_exist()
 
         if isinstance(settings, RedisCacheSettings):
             await create_redis_cache_pool()
 
         if isinstance(settings, RedisQueueSettings):
             await create_redis_queue_pool()
-
-        if isinstance(settings, RedisRateLimiterSettings):
-            await create_redis_rate_limit_pool()
 
         yield
 
@@ -106,9 +105,6 @@ def lifespan_factory(
 
         if isinstance(settings, RedisQueueSettings):
             await close_redis_queue_pool()
-
-        if isinstance(settings, RedisRateLimiterSettings):
-            await close_redis_rate_limit_pool()
 
     return lifespan
 
@@ -122,7 +118,6 @@ def create_application(
         | AppSettings
         | ClientSideCacheSettings
         | RedisQueueSettings
-        | RedisRateLimiterSettings
         | EnvironmentSettings
     ),
     create_tables_on_start: bool = True,
@@ -147,7 +142,6 @@ def create_application(
         - RedisCacheSettings: Sets up event handlers for creating and closing a Redis cache pool.
         - ClientSideCacheSettings: Integrates middleware for client-side caching.
         - RedisQueueSettings: Sets up event handlers for creating and closing a Redis queue pool.
-        - RedisRateLimiterSettings: Sets up event handlers for creating and closing a Redis rate limiter pool.
         - EnvironmentSettings: Conditionally sets documentation URLs and integrates custom routes for API documentation
           based on the environment type.
 
@@ -165,7 +159,7 @@ def create_application(
 
     The function configures the FastAPI application with different features and behaviors
     based on the provided settings. It includes setting up database connections, Redis pools
-    for caching, queue, and rate limiting, client-side caching, and customizing the API documentation
+    for caching and queueing, client-side caching, and customizing the API documentation
     based on the environment settings.
     """
     # --- before creating application ---
@@ -211,3 +205,6 @@ def create_application(
             application.include_router(docs_router)
 
         return application
+
+
+

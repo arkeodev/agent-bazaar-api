@@ -11,6 +11,7 @@ config = Config(env_path)
 
 class AppSettings(BaseSettings):
     APP_NAME: str = config("APP_NAME", default="FastAPI app")
+    API_BASE_URL: str = config("API_BASE_URL", default="http://localhost:8000")
     APP_DESCRIPTION: str | None = config("APP_DESCRIPTION", default=None)
     APP_VERSION: str | None = config("APP_VERSION", default=None)
     LICENSE_NAME: str | None = config("LICENSE", default=None)
@@ -85,17 +86,6 @@ class RedisQueueSettings(BaseSettings):
     REDIS_QUEUE_PORT: int = config("REDIS_QUEUE_PORT", default=6379)
 
 
-class RedisRateLimiterSettings(BaseSettings):
-    REDIS_RATE_LIMIT_HOST: str = config("REDIS_RATE_LIMIT_HOST", default="localhost")
-    REDIS_RATE_LIMIT_PORT: int = config("REDIS_RATE_LIMIT_PORT", default=6379)
-    REDIS_RATE_LIMIT_URL: str = f"redis://{REDIS_RATE_LIMIT_HOST}:{REDIS_RATE_LIMIT_PORT}"
-
-
-class DefaultRateLimitSettings(BaseSettings):
-    DEFAULT_RATE_LIMIT_LIMIT: int = config("DEFAULT_RATE_LIMIT_LIMIT", default=10)
-    DEFAULT_RATE_LIMIT_PERIOD: int = config("DEFAULT_RATE_LIMIT_PERIOD", default=3600)
-
-
 class EnvironmentOption(Enum):
     LOCAL = "local"
     STAGING = "staging"
@@ -115,8 +105,6 @@ class Settings(
     RedisCacheSettings,
     ClientSideCacheSettings,
     RedisQueueSettings,
-    RedisRateLimiterSettings,
-    DefaultRateLimitSettings,
     EnvironmentSettings,
 ):
     pass
