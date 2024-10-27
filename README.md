@@ -29,7 +29,7 @@ touch .env
 
 Inside `.env`, create the following variables:
 
-```
+```raw
 # ------------- app settings -------------
 APP_NAME="Agent Bazaar"
 APP_DESCRIPTION="Your AI Agent Marketplace"
@@ -70,22 +70,26 @@ docker compose up
 ```
 
 This will start:
+
 - Web application (FastAPI + Streamlit)
 - PostgreSQL database
 
 ### Manual Setup
 
 1. Install poetry:
+
 ```sh
 pip install poetry
 ```
 
-2. Install dependencies:
+2.Install dependencies:
+
 ```sh
 poetry install
 ```
 
-3. Start PostgreSQL (if not using existing instance):
+3.Start PostgreSQL (if not using existing instance):
+
 ```sh
 docker run -d \
     -p 5432:5432 \
@@ -95,7 +99,8 @@ docker run -d \
     postgres
 ```
 
-4. Run the application:
+4.Run the application:
+
 ```sh
 poetry run uvicorn src.app.main:app --reload
 ```

@@ -8,10 +8,10 @@ import yaml
 from PIL import Image
 from pydantic import BaseModel
 
-from src.app.api.dependencies import get_current_user
-from src.app.core.logger import logging
-from src.app.schemas.agent import Agent
-from src.app.streamlit.streamlit_auth import (
+from app.api.dependencies import get_current_user
+from app.core.logger import logging
+from app.schemas.agent import Agent
+from app.streamlit.streamlit_auth import (
     is_logged_in,
     load_image_as_base64,
     login_user,

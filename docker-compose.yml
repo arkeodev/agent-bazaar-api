@@ -8,42 +8,56 @@ services:
     # command: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
     env_file:
       - ./src/.env
+    environment:
+      - DOCKER_ENV=true
     # -------- replace with comment if you are using nginx --------
     ports:
       - "8000:8000"
     # expose:
     #   - "8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./src/app:/code/app
+      - ./src/.env:/code/.env
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run src/app/streamlit/main.py --server.port 8501 --server.address 0.0.0.0
+    env_file:
+      - ./src/.env
+    environment:
+      - DOCKER_ENV=true
+      - PYTHONPATH=/code/src
+    ports:
+      - "8501:8501"
+    depends_on:
+      - web
+    volumes:
+      - ./src:/code/src
       - ./src/.env:/code/.env
 
   db:
     image: postgres:13
     env_file:
       - ./src/.env
+    environment:
+      - DOCKER_ENV=true
     volumes:
       - postgres-data:/var/lib/postgresql/data
     # -------- replace with comment to run migrations with docker --------
     # expose:
     #   - "5432"
     ports:
-     - 5432:5432
-
-  #-------- uncomment to run with pgadmin --------
-  # pgadmin:
-  #   container_name: pgadmin4
-  #   image: dpage/pgadmin4:latest
-  #   restart: always
-  #   ports:
-  #     - "5050:80"
-  #   volumes:
-  #     - pgadmin-data:/var/lib/pgadmin
-  #   env_file:
-  #     - ./src/.env
-  #   depends_on:
-  #     - db
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
 
   #-------- uncomment to run with nginx --------
   # nginx:
@@ -78,9 +92,11 @@ services:
       - ./src/.env
     depends_on:
       - db
-    command: python -m pytest ./tests
+    command: pytest /code/tests/
     volumes:
-      - .:/code
+      - ./tests:/code/tests
+      - ./src:/code/src
+      - ./src/.env:/code/.env
 
 volumes:
   postgres-data:
