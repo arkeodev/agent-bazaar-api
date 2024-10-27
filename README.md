@@ -50,10 +50,10 @@ The Agent Bazaar API serves as:
 - [`PostgreSQL`](https://www.postgresql.org): The World's Most Advanced Open Source Relational Database
 - [`Uvicorn`](https://www.uvicorn.org/): ASGI server
 - [`Poetry`](https://python-poetry.org/): Dependency Management
-- [`Docker`](https://www.docker.com/): Containerization platform
+- [`Docker`](https://www.docker.com/): Container orchestration tool for defining multi-container applications
 - [`Docker Compose`](https://docs.docker.com/compose/): For easy deployment and development
-- [`JWT`](https://jwt.io/): JSON Web Tokens for secure authentication
-- [`Pytest`](https://docs.pytest.org/en/latest/): Testing framework
+- [`JWT`](https://jwt.io/): JSON Web Tokens for secure authentication. Industry standard for secure authentication tokens
+- [`Pytest`](https://docs.pytest.org/en/latest/): Powerful Python testing framework
 
 ## Features
 
