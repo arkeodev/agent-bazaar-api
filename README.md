@@ -42,18 +42,18 @@ The Agent Bazaar API serves as:
 
 **Agent Bazaar** creates an extensible marketplace for AI agents using FastAPI, Streamlit, and PostgreSQL:
 
-- [`FastAPI`](https://fastapi.tiangolo.com): Modern Python web framework for building APIs
-- [`SQLAlchemy`](https://www.sqlalchemy.org/): The Python SQL Toolkit and Object-Relational Mapping Library
-- [`Alembic`](https://alembic.sqlalchemy.org/en/latest/): Database migrations
-- [`Pydantic`](https://docs.pydantic.dev/): Data validation and settings management using Python type annotations
-- [`Streamlit`](https://streamlit.io): Python library for creating web apps
-- [`PostgreSQL`](https://www.postgresql.org): The World's Most Advanced Open Source Relational Database
-- [`Uvicorn`](https://www.uvicorn.org/): ASGI server
-- [`Poetry`](https://python-poetry.org/): Dependency Management
-- [`Docker`](https://www.docker.com/): Container orchestration tool for defining multi-container applications
-- [`Docker Compose`](https://docs.docker.com/compose/): For easy deployment and development
-- [`JWT`](https://jwt.io/): JSON Web Tokens for secure authentication. Industry standard for secure authentication tokens
-- [`Pytest`](https://docs.pytest.org/en/latest/): Powerful Python testing framework
+- [`FastAPI`](https://fastapi.tiangolo.com) - Modern Python web framework for building APIs
+- [`SQLAlchemy`](https://www.sqlalchemy.org/) - The Python SQL Toolkit and Object-Relational Mapping Library
+- [`Alembic`](https://alembic.sqlalchemy.org/en/latest/) - Database migrations
+- [`Pydantic`](https://docs.pydantic.dev/) - Data validation and settings management using Python type annotations
+- [`Streamlit`](https://streamlit.io) - Python library for creating web apps
+- [`PostgreSQL`](https://www.postgresql.org) - The World's Most Advanced Open Source Relational Database
+- [`Uvicorn`](https://www.uvicorn.org/) - ASGI server
+- [`Poetry`](https://python-poetry.org/) - Dependency Management
+- [`Docker`](https://www.docker.com/) - Container orchestration tool for defining multi-container applications
+- [`Docker Compose`](https://docs.docker.com/compose/) - For easy deployment and development
+- [`JWT`](https://jwt.io/) - JSON Web Tokens for secure authentication. Industry standard for secure authentication tokens
+- [`Pytest`](https://docs.pytest.org/en/latest/) - Powerful Python testing framework
 
 ## Features
 
