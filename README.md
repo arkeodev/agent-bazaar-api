@@ -64,20 +64,24 @@ graph TB
 ### Service Definitions
 
 #### Client Layer
+
 - **Streamlit Frontend**: Implemented web interface for users to interact with the marketplace
 - **Third-party Clients**: Unimplemented external applications that can integrate with the platform via API
 
 #### API Layer
+
 - **FastAPI Backend**: Implemented core API service handling all backend operations
 - **Authentication Service**: Implemented JWT-based user authentication and authorization
 - **API Gateway**: Unimplemented service for routing, rate limiting, and API management
 
 #### Service Layer
+
 - **Agent Manager**: Unimplemented service responsible for agent lifecycle, deployment, and execution
 - **Transaction Manager**: Unimplemented service handling payments, billing, and marketplace transactions
 - **Security Manager**: Unimplemented service managing access control, audit logging, and security policies
 
 #### Data Layer
+
 - **PostgreSQL**: Implemented primary database for storing application data
 - **Cache**: Unimplemented caching layer for improved performance
 
@@ -217,6 +221,14 @@ docker run -d \
 ```
 
 4.Run the application:
+
+Run database migrations first:
+
+```sh
+poetry run alembic upgrade head
+```
+
+Then start the application: 
 
 ```sh
 poetry run uvicorn src.app.main:app --reload
