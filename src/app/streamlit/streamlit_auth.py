@@ -7,8 +7,8 @@ from typing import Optional
 import requests
 import streamlit as st
 
-from src.app.core.config import settings
-from src.app.core.logger import logging
+from app.core.config import settings
+from app.core.logger import logging
 
 logger = logging.getLogger(__name__)
 

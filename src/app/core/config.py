@@ -1,22 +1,33 @@
 import os
 from enum import Enum
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings
 from starlette.config import Config
 
+# Get the absolute path to the .env file
 current_file_dir = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(current_file_dir, "..", "..", ".env")
 config = Config(env_path)
 
+# Determine if running in Docker based on environment variable
+USE_DOCKER = os.getenv("DOCKER_ENV", "false").lower() == "true"
+
 
 class AppSettings(BaseSettings):
     APP_NAME: str = config("APP_NAME", default="FastAPI app")
-    API_BASE_URL: str = config("API_BASE_URL", default="http://localhost:8000")
+    API_BASE_URL: str = "http://web:8000" if USE_DOCKER else "http://localhost:8000"
     APP_DESCRIPTION: str | None = config("APP_DESCRIPTION", default=None)
     APP_VERSION: str | None = config("APP_VERSION", default=None)
-    LICENSE_NAME: str | None = config("LICENSE", default=None)
+    LICENSE_NAME: str | None = config("LICENSE_NAME", default=None)
     CONTACT_NAME: str | None = config("CONTACT_NAME", default=None)
     CONTACT_EMAIL: str | None = config("CONTACT_EMAIL", default=None)
+
+    # Streamlit-specific settings
+    STREAMLIT_SERVER_PORT: int = config("STREAMLIT_SERVER_PORT", default=8501)
+    STREAMLIT_SERVER_ADDRESS: str = config(
+        "STREAMLIT_SERVER_ADDRESS", default="0.0.0.0"
+    )
 
 
 class CryptSettings(BaseSettings):
@@ -30,34 +41,14 @@ class DatabaseSettings(BaseSettings):
     pass
 
 
-class SQLiteSettings(DatabaseSettings):
-    SQLITE_URI: str = config("SQLITE_URI", default="./sql_app.db")
-    SQLITE_SYNC_PREFIX: str = config("SQLITE_SYNC_PREFIX", default="sqlite:///")
-    SQLITE_ASYNC_PREFIX: str = config(
-        "SQLITE_ASYNC_PREFIX", default="sqlite+aiosqlite:///"
-    )
-
-
-class MySQLSettings(DatabaseSettings):
-    MYSQL_USER: str = config("MYSQL_USER", default="username")
-    MYSQL_PASSWORD: str = config("MYSQL_PASSWORD", default="password")
-    MYSQL_SERVER: str = config("MYSQL_SERVER", default="localhost")
-    MYSQL_PORT: int = config("MYSQL_PORT", default=5432)
-    MYSQL_DB: str = config("MYSQL_DB", default="dbname")
-    MYSQL_URI: str = (
-        f"{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_SERVER}:{MYSQL_PORT}/{MYSQL_DB}"
-    )
-    MYSQL_SYNC_PREFIX: str = config("MYSQL_SYNC_PREFIX", default="mysql://")
-    MYSQL_ASYNC_PREFIX: str = config("MYSQL_ASYNC_PREFIX", default="mysql+aiomysql://")
-    MYSQL_URL: str = config("MYSQL_URL", default=None)
-
-
-class PostgresSettings(DatabaseSettings):
+class PostgresSettings(BaseSettings):
     POSTGRES_USER: str = config("POSTGRES_USER", default="postgres")
     POSTGRES_PASSWORD: str = config("POSTGRES_PASSWORD", default="postgres")
-    POSTGRES_SERVER: str = config("POSTGRES_SERVER", default="localhost")
+    POSTGRES_SERVER: str = config(
+        "POSTGRES_SERVER", default="localhost" if not USE_DOCKER else "db"
+    )
     POSTGRES_PORT: int = config("POSTGRES_PORT", default=5432)
-    POSTGRES_DB: str = config("POSTGRES_DB", default="postgres")
+    POSTGRES_DB: str = config("POSTGRES_DB", default="agents")
     POSTGRES_SYNC_PREFIX: str = config("POSTGRES_SYNC_PREFIX", default="postgresql://")
     POSTGRES_ASYNC_PREFIX: str = config(
         "POSTGRES_ASYNC_PREFIX", default="postgresql+asyncpg://"
@@ -75,10 +66,13 @@ class FirstUserSettings(BaseSettings):
     ADMIN_PASSWORD: str = config("ADMIN_PASSWORD", default="!Ch4ng3Th1sP4ssW0rd!")
 
 
-class TestSettings(BaseSettings): ...
+class TestSettings(BaseSettings):
+    """Add test-specific settings if needed"""
+
+    pass
 
 
-class EnvironmentOption(Enum):
+class EnvironmentOption(str, Enum):
     LOCAL = "local"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -90,13 +84,23 @@ class EnvironmentSettings(BaseSettings):
 
 class Settings(
     AppSettings,
+    DatabaseSettings,
     PostgresSettings,
     CryptSettings,
     FirstUserSettings,
     TestSettings,
     EnvironmentSettings,
 ):
-    pass
+    class Config:
+        case_sensitive = True
+        env_file = env_path
+        env_file_encoding = "utf-8"
 
 
-settings = Settings()
+@lru_cache()
+def get_settings() -> Settings:
+    """Cache settings to avoid reading .env file multiple times"""
+    return Settings()
+
+
+settings = get_settings()
