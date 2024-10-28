@@ -228,7 +228,7 @@ Run database migrations first:
 poetry run alembic upgrade head
 ```
 
-Then start the application: 
+Then start the application:
 
 ```sh
 poetry run uvicorn src.app.main:app --reload
@@ -238,8 +238,8 @@ poetry run uvicorn src.app.main:app --reload
 
 ### Accessing the Application
 
-- Frontend (Streamlit): http://localhost:8501
-- API Documentation: http://localhost:8000/docs
+- Frontend (Streamlit): <http://localhost:8501>
+- API Documentation: <http://localhost:8000/docs>
 
 ### Agent Configuration
 

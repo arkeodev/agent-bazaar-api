@@ -10,11 +10,9 @@ services:
       - ./src/.env
     environment:
       - DOCKER_ENV=true
-    # -------- replace with comment if you are using nginx --------
+
     ports:
       - "8000:8000"
-    # expose:
-    #   - "8000"
     depends_on:
       db:
         condition: service_healthy
@@ -48,9 +46,7 @@ services:
       - DOCKER_ENV=true
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    # -------- replace with comment to run migrations with docker --------
-    # expose:
-    #   - "5432"
+
     ports:
       - "5432:5432"
     healthcheck:
@@ -59,15 +55,6 @@ services:
       timeout: 5s
       retries: 5      
 
-  #-------- uncomment to run with nginx --------
-  # nginx:
-  #   image: nginx:latest
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./default.conf:/etc/nginx/conf.d/default.conf
-  #   depends_on:
-  #     - web
 
   #-------- uncomment to create first superuser --------
   # create_superuser:
@@ -100,4 +87,4 @@ services:
 
 volumes:
   postgres-data:
-  #pgadmin-data:
+
