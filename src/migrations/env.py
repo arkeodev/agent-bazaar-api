@@ -1,4 +1,5 @@
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -14,9 +15,12 @@ from app.models import *
 # access to the values within the .ini file in use.
 config = context.config
 
+# Update database URL for Docker environment
+db_host = "db" if os.getenv("DOCKER_ENV", "false").lower() == "true" else "localhost"
+
 config.set_main_option(
     "sqlalchemy.url",
-    f"{settings.POSTGRES_ASYNC_PREFIX}{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@localhost/{settings.POSTGRES_DB}",
+    f"{settings.POSTGRES_ASYNC_PREFIX}{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{db_host}/{settings.POSTGRES_DB}",
 )
 
 # Interpret the config file for Python logging.

@@ -15,12 +15,24 @@ FROM python:3.11
 
 WORKDIR /code
 
+# Install PostgreSQL client
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Copy the entire src directory
+# Copy the entire src directory and configuration files
 COPY ./src /code/src
+COPY ./src/alembic.ini /code/src/alembic.ini
+COPY ./entrypoint.sh /code/
+
+# Create migrations directory
+RUN mkdir -p /code/migrations
+
+RUN chmod +x /code/entrypoint.sh
 
 # Create directory for Streamlit config
 RUN mkdir -p /root/.streamlit
@@ -28,9 +40,6 @@ RUN mkdir -p /root/.streamlit
 # Copy Streamlit config if exists
 COPY .streamlit/config.toml /root/.streamlit/config.toml
 
-# Add this after WORKDIR /code
 ENV PYTHONPATH=/code/src:$PYTHONPATH
 
-# -------- replace with comment to run with gunicorn --------
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-# CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]
+ENTRYPOINT ["/code/entrypoint.sh"]
