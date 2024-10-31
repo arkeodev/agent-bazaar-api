@@ -154,3 +154,30 @@ async def erase_db_user(
     await crud_users.db_delete(db=db, username=username)
     await blacklist_token(token=token, db=db)
     return {"message": "User deleted from the database"}
+
+
+@router.post("/create-superuser")
+async def create_superuser(user: UserCreate, db: AsyncSession = Depends(async_get_db)):
+    # Check if user already exists
+    existing_user = await crud_users.exists(db=db, username=user.username)
+    if existing_user:
+        raise DuplicateValueException("Username not available")
+
+    existing_email = await crud_users.exists(db=db, email=user.email)
+    if existing_email:
+        raise DuplicateValueException("Email is already registered")
+
+    # Create superuser
+    hashed_password = get_password_hash(user.password)
+    user_data = UserCreateInternal(
+        name=user.name,
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+    )
+
+    db_user = await crud_users.create(db=db, object=user_data)
+    db_user.is_superuser = True
+    await db.commit()
+
+    return {"message": "Superuser created successfully"}

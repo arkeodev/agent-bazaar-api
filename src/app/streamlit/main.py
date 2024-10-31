@@ -293,5 +293,32 @@ def main():
             agent_detail_page(st.session_state["current_agent"])
 
 
+def create_agent_form():
+    with st.form("create_agent_form"):
+        name = st.text_input("Agent Name")
+        image_path = st.text_input("Image Path")
+        description = st.text_area("Description")
+        version = st.text_input("Version")
+        port = st.number_input("Port", min_value=8000, max_value=9000)
+        submit = st.form_submit_button("Create Agent")
+
+        if submit:
+            # Logic to create agent
+            st.success("Agent created successfully!")
+
+
+def upload_agent_app():
+    with st.form("upload_agent_form"):
+        name = st.text_input("Agent Name")
+        docker_image = st.text_input("Docker Image")
+        description = st.text_area("Description")
+        version = st.text_input("Version")
+        submit = st.form_submit_button("Upload Agent")
+
+        if submit:
+            # Logic to upload and start agent container
+            st.success("Agent uploaded successfully!")
+
+
 if __name__ == "__main__":
     main()
