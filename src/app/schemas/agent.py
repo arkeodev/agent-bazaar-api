@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
 
 
 # Define Agent model using Pydantic
@@ -9,7 +11,9 @@ class AgentBase(BaseModel):
     version: str
     creator: str
     port: int
-    status: str  # e.g., 'running', 'stopped'
+    status: Literal["running", "stopped"]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentCreate(AgentBase):
@@ -20,7 +24,9 @@ class AgentUpdate(BaseModel):
     description: str | None = None
     version: str | None = None
     port: int | None = None
-    status: str | None = None
+    status: Literal["running", "stopped"] | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentRead(AgentBase):
