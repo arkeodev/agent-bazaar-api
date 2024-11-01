@@ -1,13 +1,17 @@
 import uuid as uuid_pkg
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app import models
 from src.app.core.security import get_password_hash
 from tests.conftest import fake
 
 
-def create_user(db: Session, is_super_user: bool = False) -> models.User:
+async def create_user(db: AsyncSession, is_super_user: bool = False) -> models.User:
+    """Creates a new user in the database."""
+    if not isinstance(db, AsyncSession):
+        raise TypeError("db must be an AsyncSession instance")
+
     _user = models.User(
         name=fake.name(),
         username=fake.user_name(),
@@ -19,7 +23,7 @@ def create_user(db: Session, is_super_user: bool = False) -> models.User:
     )
 
     db.add(_user)
-    db.commit()
-    db.refresh(_user)
+    await db.commit()
+    await db.refresh(_user)
 
     return _user

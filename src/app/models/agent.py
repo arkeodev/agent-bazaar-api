@@ -1,7 +1,14 @@
+import enum
+
 from sqlalchemy import Column, Enum, Integer, String
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
+
+
+class AgentStatus(enum.Enum):
+    RUNNING = "running"
+    STOPPED = "stopped"
 
 
 class Agent(Base):
@@ -14,4 +21,4 @@ class Agent(Base):
     version = Column(String)
     creator = Column(String)
     port = Column(Integer)
-    status = Column(Enum("running", "stopped", name="status_enum"))
+    status = Column(Enum(AgentStatus))

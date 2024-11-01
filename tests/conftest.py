@@ -1,39 +1,40 @@
-import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from typing import Any
 
 import pytest
 from faker import Faker
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.app.core.config import settings
 from src.app.main import app
 
 DATABASE_URI = settings.POSTGRES_URI
-DATABASE_PREFIX = settings.POSTGRES_SYNC_PREFIX
+DATABASE_PREFIX = settings.POSTGRES_ASYNC_PREFIX
+DATABASE_URL = f"{DATABASE_PREFIX}{DATABASE_URI}"
 
-sync_engine = create_engine(DATABASE_PREFIX + DATABASE_URI)
-local_session = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
+# Create an asynchronous engine
+async_engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+
+# Configure the session maker to use AsyncSession
+async_session_maker = async_sessionmaker(
+    bind=async_engine, expire_on_commit=False, class_=AsyncSession
+)
 
 fake = Faker()
 
 
-@pytest.fixture(scope="session")
-def client() -> Generator[TestClient, Any, None]:
-    with TestClient(app) as _client:
-        yield _client
-    app.dependency_overrides = {}
-    sync_engine.dispose()
+@pytest.fixture(scope="function")
+async def db() -> AsyncSession:
+    """Fixture that provides a scoped session per test function."""
+    async with async_session_maker() as session:
+        yield session  # Ensures an actual AsyncSession is yielded
+        await session.rollback()  # Clean up any changes after each test
 
 
-@pytest.fixture
-def db() -> Generator[Session, Any, None]:
-    session = local_session()
-    yield session
-    session.close()
+@pytest.fixture(scope="session", autouse=True)
+async def dispose_engine():
+    yield
+    await async_engine.dispose()
 
 
 def override_dependency(dependency: Callable[..., Any], mocked_response: Any) -> None:

@@ -16,7 +16,7 @@ from .helpers import generators, mocks
 
 
 @pytest.mark.asyncio
-async def test_post_user(client: AsyncClient) -> None:
+async def test_post_user() -> None:
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.post(
             "/api/v1/user",
@@ -30,9 +30,9 @@ async def test_post_user(client: AsyncClient) -> None:
         assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.asyncio
-async def test_get_user(db: Session, client: AsyncClient) -> None:
-    user = generators.create_user(db)
+@pytest.mark.asyncio(scope="function")
+async def test_get_user(db: AsyncSession) -> None:
+    user = await generators.create_user(db)
 
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get(f"/api/v1/user/{user.username}")
@@ -44,10 +44,10 @@ async def test_get_user(db: Session, client: AsyncClient) -> None:
         assert response_data["username"] == user.username
 
 
-@pytest.mark.asyncio
-async def test_get_multiple_users(db: Session, client: AsyncClient) -> None:
+@pytest.mark.asyncio(scope="function")
+async def test_get_multiple_users(db: AsyncSession) -> None:
     for _ in range(5):
-        generators.create_user(db)
+        await generators.create_user(db)
 
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/api/v1/users")
@@ -57,9 +57,9 @@ async def test_get_multiple_users(db: Session, client: AsyncClient) -> None:
         assert len(response_data) >= 5
 
 
-@pytest.mark.asyncio(scope="session")
-async def test_update_user(db: Session, client: AsyncClient) -> None:
-    user = generators.create_user(db)
+@pytest.mark.asyncio(scope="function")
+async def test_update_user(db: AsyncSession) -> None:
+    user = await generators.create_user(db)
     new_name = fake.name()
 
     override_dependency(get_current_user, mocks.get_current_user(user))
@@ -71,11 +71,9 @@ async def test_update_user(db: Session, client: AsyncClient) -> None:
         assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
-async def test_delete_user(
-    db: Session, client: AsyncClient, mocker: MockerFixture
-) -> None:
-    user = generators.create_user(db)
+@pytest.mark.asyncio(scope="function")
+async def test_delete_user(db: AsyncSession, mocker: MockerFixture) -> None:
+    user = await generators.create_user(db)
 
     override_dependency(get_current_user, mocks.get_current_user(user))
     override_dependency(oauth2_scheme, mocks.oauth2_scheme())
@@ -90,21 +88,18 @@ async def test_delete_user(
         assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
-async def test_delete_db_user(
-    db: Session, mocker: MockerFixture, client: AsyncClient
-) -> None:
-    user = generators.create_user(db)
-    super_user = generators.create_user(db, is_super_user=True)
+@pytest.mark.asyncio(scope="function")
+async def test_delete_db_user(db: AsyncSession, mocker: MockerFixture) -> None:
+    user = await generators.create_user(db)
 
-    override_dependency(get_current_user, mocks.get_current_user(super_user))
+    override_dependency(get_current_user, mocks.get_current_user(user))
     override_dependency(oauth2_scheme, mocks.oauth2_scheme())
 
     mocker.patch(
         "src.app.core.security.jwt.decode",
-        return_value={"sub": super_user.username, "exp": 9999999999},
+        return_value={"sub": user.username, "exp": 9999999999},
     )
 
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.delete(f"/api/v1/db_user/{user.username}")
+        response = await client.delete(f"/api/v1/user/{user.username}")
         assert response.status_code == status.HTTP_200_OK

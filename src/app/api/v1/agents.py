@@ -1,9 +1,7 @@
 import docker
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...api.dependencies import get_current_superuser
-from ...core.db.database import async_get_db
 from ...core.port_manager import PortManager
 
 router = APIRouter()
@@ -33,7 +31,8 @@ async def start_agent(
         return {
             "message": f"Agentic app {agent_id} started successfully on port {port}"
         }
-
+    except docker.errors.NotFound:
+        raise HTTPException(status_code=404, detail="Docker image not found")
     except docker.errors.APIError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
